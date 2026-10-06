@@ -27,8 +27,9 @@ input {
 }
 
 .app-shell {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
   padding: 20px 16px 40px;
   transition: background 0.35s ease, color 0.35s ease;
 }
@@ -1322,31 +1323,23 @@ h2 {
   }
 }
 
-@media (max-width: 900px) {
-  .mood-stage,
-  .section-grid {
-    grid-template-columns: 1fr;
-  }
+   @media (max-width: 900px) {
+     .mood-stage,
+     .section-grid {
+       grid-template-columns: 1fr;
+     }
 
-  .weather-widget,
-  .sound-widget {
-    position: static;
-    width: 100%;
-    margin-bottom: 16px;
-  }
+     .activity-list,
+     .energy-card-grid,
+     .mood-grid {
+       grid-template-columns: 1fr;
+     }
 
-  .activity-list {
-    grid-template-columns: 1fr;
-  }
-
-  .energy-card-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .mood-grid {
-    grid-template-columns: 1fr;
-  }
-}
+     .card {
+       height: auto;
+       overflow: visible;
+     }
+   }
 
 @media (max-width: 560px) {
   .app-shell {
@@ -1373,4 +1366,346 @@ h2 {
   .weather-widget-head {
     flex-direction: column;
   }
+}
+
+/* ===== footer widget strip ===== */
+.app-frame {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-frame {
+  order: 1;
+}
+
+.top-widgets {
+  order: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 10px;
+  margin: 8px 0 0;
+  padding: 0 4px 8px;
+  opacity: 0.65;
+  transition: opacity 0.2s ease;
+  position: relative;
+  z-index: 20;
+}
+
+.top-widgets:hover,
+   .top-widgets:focus-within,
+   .top-widgets:has(.sound-toggle-main.open),
+   .top-widgets:has(.credits[open]) {
+     opacity: 1;
+   }
+
+
+
+/* turn widgets into small pills */
+.top-widgets .mode-widget,
+.top-widgets .weather-widget,
+.top-widgets .sound-widget {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: auto;
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  box-shadow: none;
+  opacity: 1;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Dark mode toggle + counter, side by side */
+.top-widgets .mode-widget {
+  flex-direction: row;
+  justify-content: center;
+}
+
+.top-widgets .mode-toggle {
+  padding: 2px 4px;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+}
+
+.top-widgets .mode-toggle-track {
+  width: 34px;
+  height: 20px;
+}
+
+.top-widgets .mode-toggle-thumb {
+  width: 14px;
+  height: 14px;
+}
+
+.mode-dark .top-widgets .mode-toggle-thumb {
+  transform: translateX(14px);
+}
+
+.top-widgets .mood-count-badge {
+  margin: 0;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+/* Weather: one line only */
+.top-widgets .weather-widget-head {
+  display: none;
+}
+
+.top-widgets .weather-widget-grid {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.top-widgets .weather-widget-grid > div {
+  display: flex;
+}
+
+.top-widgets .weather-widget-grid > div + div::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--text-soft);
+}
+
+.top-widgets .weather-widget-grid span {
+  display: none;
+}
+
+.top-widgets .weather-widget-grid strong {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.top-widgets .weather-widget-message {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+/* Sound: small button, options open upward */
+.top-widgets .sound-widget {
+  min-width: 0;
+}
+
+.top-widgets .sound-toggle-main {
+  width: auto;
+  padding: 2px 8px;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  font-size: 0.78rem;
+}
+
+.top-widgets .sound-chip-row {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  margin-top: 0;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--widget-bg);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(16px);
+}
+
+/* Mobile: toggle + sound shares one row, weather own row */
+@media (max-width: 900px) {
+  .top-widgets .mode-widget {
+    order: 1;
+  }
+
+  .top-widgets .sound-widget {
+    order: 2;
+  }
+
+  .top-widgets .weather-widget {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: center;
+    border-radius: 14px;
+  }
+}
+
+  /* ===== Credits (collapsed) ===== */
+.credits {
+  order: 3;
+  align-self: center;
+  position: relative;
+  margin: 2px 0 12px;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.credits:hover,
+.credits[open] {
+  opacity: 1;
+}
+
+.credits summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 2px 10px;
+  border-radius: 999px;
+  text-align: center;
+  user-select: none;
+}
+
+.credits summary::-webkit-details-marker {
+  display: none;
+}
+
+.credits-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 380px);
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--widget-bg);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(16px);
+  color: var(--text-main);
+  line-height: 1.4;
+  text-align: left;
+  z-index: 30;
+}
+
+.credits-panel p {
+  margin: 0 0 8px;
+}
+
+.credits-panel p:last-child {
+  margin-bottom: 0;
+}
+
+.credits-panel a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* ===== Credits: bottom of the page on desktop only ===== */
+@media (min-width: 901px) {
+  .app-frame {
+    min-height: calc(100dvh - 60px);
+  }
+
+  .credits {
+    margin-top: auto;
+  }
+}
+
+/* ===== Desktop: scale up like 110% browser zoom ===== */
+@media (min-width: 901px) {
+  :root {
+    --ui-zoom: 1.1;
+  }
+
+  body {
+    zoom: var(--ui-zoom);
+  }
+
+  /* zoom also scales vh-based heights, so compensate to keep the layout fitting the window */
+  .app-shell {
+    min-height: calc(100dvh / var(--ui-zoom));
+  }
+
+  .card {
+    height: calc((100vh - 120px) / var(--ui-zoom));
+  }
+}
+
+/* ===== Widget pills: separate + same size ===== */
+
+/* The old wrapper stops being a box, so the dark mode toggle
+   and the "Recorded" counter become two separate pills */
+.top-widgets .mode-widget {
+  display: contents;
+}
+
+.top-widgets .mode-toggle,
+.top-widgets .mood-count-badge,
+.top-widgets .weather-widget,
+.top-widgets .sound-widget {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--widget-bg);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: none;
+  backdrop-filter: blur(16px);
+  font-size: 0.78rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.top-widgets .sound-toggle-main {
+  padding: 0;
+}
+
+/* Desktop: the three small pills share the same width */
+@media (min-width: 901px) {
+  .top-widgets .mode-toggle,
+  .top-widgets .mood-count-badge,
+  .top-widgets .sound-widget {
+    min-width: 150px;
+  }
+}
+
+/* Mobile: keep the toggle and counter in the first row, slightly tighter */
+@media (max-width: 900px) {
+  .top-widgets .mode-toggle,
+  .top-widgets .mood-count-badge {
+    order: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  .top-widgets .mode-toggle,
+  .top-widgets .mood-count-badge,
+  .top-widgets .weather-widget,
+  .top-widgets .sound-widget {
+    padding: 0 10px;
+    gap: 6px;
+    font-size: 0.74rem;
+  }
+}
+
+.trainer-stat {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  opacity: 0.8;
+}
+
+.credits summary {
+  white-space: nowrap;
+}
+
+.credits-count {
+  font-size: 0.72rem;
 }

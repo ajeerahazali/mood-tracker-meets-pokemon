@@ -137,27 +137,36 @@ const activityQuotes = {
   'Tidy one small spot nearby': 'Order in one small place can create ease around you.',
 };
 
-const weatherCodeLabels = {
-  0: 'Clear sky',
-  1: 'Mostly clear',
-  2: 'Partly cloudy',
-  3: 'Cloudy',
-  45: 'Foggy',
-  48: 'Foggy',
-  51: 'Light drizzle',
-  53: 'Drizzle',
-  55: 'Heavy drizzle',
-  61: 'Light rain',
-  63: 'Rain',
-  65: 'Heavy rain',
-  71: 'Light snow',
-  73: 'Snow',
-  75: 'Heavy snow',
-  80: 'Rain showers',
-  81: 'Strong rain showers',
-  82: 'Heavy rain showers',
-  95: 'Thunderstorm',
-};
+    const weatherCodeLabels = {
+      0: 'Clear sky',
+      1: 'Mostly clear',
+      2: 'Partly cloudy',
+      3: 'Cloudy',
+      45: 'Foggy',
+      48: 'Foggy',
+      51: 'Light drizzle',
+      53: 'Drizzle',
+      55: 'Heavy drizzle',
+      56: 'Freezing drizzle',
+      57: 'Freezing drizzle',
+      61: 'Light rain',
+      63: 'Rain',
+      65: 'Heavy rain',
+      66: 'Freezing rain',
+      67: 'Freezing rain',
+      71: 'Light snow',
+      73: 'Snow',
+      75: 'Heavy snow',
+      77: 'Snow grains',
+      80: 'Rain showers',
+      81: 'Strong rain showers',
+      82: 'Heavy rain showers',
+      85: 'Snow showers',
+      86: 'Heavy snow showers',
+      95: 'Thunderstorm',
+      96: 'Thunderstorm with hail',
+      99: 'Thunderstorm with hail',
+    };
 
 const defaultView = {
   label: 'No mood yet',
@@ -204,28 +213,23 @@ const ambientTracks = {
   rain: {
     label: 'Rain',
     emoji: '🌧️',
-    url: 'https://orangefreesounds.com/wp-content/uploads/2014/07/Rain-sound-summer-storm.mp3',
+    url: '/audio/rain.mp3',
   },
   waves: {
     label: 'Waves',
     emoji: '🌊',
-    url: 'https://www.orangefreesounds.com/wp-content/uploads/2016/08/Waves-sound-effect.mp3',
+    url: '/audio/waves.mp3',
   },
   forest: {
     label: 'Forest',
     emoji: '🌳',
-    url: 'https://www.orangefreesounds.com/wp-content/uploads/2021/03/Forest-sound-effect.mp3',
+    url: '/audio/forest.mp3',
   },
   lofi: {
-    label: 'Poké & Chill',
+    label: 'Lofi',
     emoji: '🎶',
-    url: 'https://www.fesliyanstudios.com/download-link.php?src=i&id=350',
-  },
-  pokemon: {
-    label: 'Pokemon Theme',
-    emoji: '🔴',
-    url: 'https://instrumentalfx.co/wp-content/upload/11/Pokemon-Theme-Song.mp3',
-  },
+    url: '/audio/lofi.mp3',
+  }
 };
 
 function getEnergyBand(energy) {
@@ -313,55 +317,125 @@ function App() {
     return weatherCodeLabels[weatherState.data.weatherCode] || 'Current weather';
   }, [weatherState.data]);
 
-  useEffect(() => {
-    const controller = new AbortController();
+      useEffect(() => {
+        const controller = new AbortController();
+        const { signal } = controller;
 
-    async function loadWeather() {
-      try {
-        setWeatherState({ status: 'loading', data: null, error: '' });
+        // Ask the browser for the device location (shows a permission prompt)
+        const getBrowserPosition = () =>
+          new Promise((resolve) => {
+            if (!('geolocation' in navigator)) {
+              resolve(null);
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              (position) =>
+                resolve({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                }),
+              () => resolve(null),
+              { timeout: 8000 },
+            );
+          });
 
-        const response = await fetch(
-          'https://api.open-meteo.com/v1/forecast?latitude=3.1390&longitude=101.6869&current=temperature_2m,weather_code',
-          { signal: controller.signal },
-        );
+        // Get a place name. With no coordinates, the service guesses
+        // the location from the visitor's IP address instead.
+        const lookupPlace = async (coords) => {
+          const params = new URLSearchParams({ localityLanguage: 'en' });
+          if (coords) {
+            params.set('latitude', coords.latitude);
+            params.set('longitude', coords.longitude);
+          }
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?${params}`,
+            { signal },
+          );
+          if (!response.ok) throw new Error('Location lookup failed.');
+          const json = await response.json();
+          return {
+            latitude: json.latitude,
+            longitude: json.longitude,
+            name: json.city || json.locality || json.principalSubdivision || json.countryName || '',
+          };
+        };
 
-        if (!response.ok) {
-          throw new Error('Weather data could not load right now.');
+        async function loadWeather() {
+          try {
+            setWeatherState({ status: 'loading', data: null, error: '' });
+
+            let coords = null;
+            let place = '';
+
+            // 1) Silent: guess from the IP address (no permission prompt)
+            try {
+              const guess = await lookupPlace(null);
+              if (typeof guess.latitude === 'number' && typeof guess.longitude === 'number') {
+                coords = { latitude: guess.latitude, longitude: guess.longitude };
+                place = guess.name;
+              }
+            } catch (error) {
+              if (error.name === 'AbortError') return;
+            }
+
+            // 2) If that failed, ask the browser (shows a permission prompt)
+            if (!coords) {
+              coords = await getBrowserPosition();
+              if (!coords) {
+                throw new Error('Could not detect your location.');
+              }
+              try {
+                place = (await lookupPlace(coords)).name;
+              } catch {
+                // weather still works; we just show a generic label
+              }
+            }
+
+            const url =
+              'https://api.open-meteo.com/v1/forecast' +
+              `?latitude=${coords.latitude.toFixed(2)}&longitude=${coords.longitude.toFixed(2)}` +
+              '&current=temperature_2m,weather_code';
+
+            const response = await fetch(url, { signal });
+
+            if (!response.ok) {
+              throw new Error('Weather data could not load right now.');
+            }
+
+            const json = await response.json();
+            const current = json.current;
+
+            if (!current || typeof current.temperature_2m !== 'number') {
+              throw new Error('Weather data is missing expected fields.');
+            }
+
+            setWeatherState({
+              status: 'ready',
+              data: {
+                temperature: current.temperature_2m,
+                weatherCode: current.weather_code,
+                time: current.time,
+                place: place || 'Your location',
+              },
+              error: '',
+            });
+          } catch (error) {
+            if (error.name === 'AbortError') {
+              return;
+            }
+
+            setWeatherState({
+              status: 'error',
+              data: null,
+              error: error.message || 'Weather data could not load right now.',
+            });
+          }
         }
 
-        const json = await response.json();
-        const current = json.current;
+        loadWeather();
 
-        if (!current || typeof current.temperature_2m !== 'number') {
-          throw new Error('Weather data is missing expected fields.');
-        }
-
-        setWeatherState({
-          status: 'ready',
-          data: {
-            temperature: current.temperature_2m,
-            weatherCode: current.weather_code,
-            time: current.time,
-          },
-          error: '',
-        });
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          return;
-        }
-
-        setWeatherState({
-          status: 'error',
-          data: null,
-          error: error.message || 'Weather data could not load right now.',
-        });
-      }
-    }
-
-    loadWeather();
-
-    return () => controller.abort();
-  }, []);
+        return () => controller.abort();
+      }, []);
 
   useEffect(() => {
     try {
@@ -436,7 +510,6 @@ function App() {
     setSelectedActivity('');
     setNoticedText('');
     setCurrentStep('mood');
-    setJournalText('');
   }, []);
 
   const stepConfig = {
@@ -458,7 +531,7 @@ function App() {
       <div className="app-frame">
         <audio ref={ambientAudioRef} aria-hidden="true" />
         <audio ref={selectAudioRef} aria-hidden="true" preload="auto">
-          <source src="https://www.orangefreesounds.com/wp-content/uploads/2020/09/8-bit-pop-sound-effect.mp3" type="audio/mpeg" />
+          <source src="/audio/select.mp3" type="audio/mpeg" />
         </audio>
       <div className="top-widgets">
         <aside className="mode-widget" aria-label="Display mode">
@@ -475,7 +548,6 @@ function App() {
             </span>
             <span className="mode-toggle-label">{colorMode === 'dark' ? 'Dark mode' : 'Light mode'}</span>
           </button>
-          <div className="mood-count-badge" aria-live="polite">Recorded: {moodCount}</div>
         </aside>
 
         <aside className="weather-widget" aria-live="polite">
@@ -496,7 +568,7 @@ function App() {
               <div className="weather-widget-grid">
                 <div>
                   <span>Location</span>
-                  <strong>Kuala Lumpur</strong>
+                  <strong>{weatherState.data.place}</strong>
                 </div>
                 <div>
                   <span>Condition</span>
@@ -504,7 +576,7 @@ function App() {
                 </div>
                 <div>
                   <span>Temperature</span>
-                  <strong>{weatherState.data.temperature} C</strong>
+                  <strong>{Math.round(weatherState.data.temperature)}°C</strong>
                 </div>
               </div>
             )}
@@ -542,6 +614,8 @@ function App() {
             )}
           </div>
         </div>
+
+
 
          <div className="step-frame section-reveal" key={currentStep}>
           {currentStep === 'mood' && (
@@ -863,10 +937,39 @@ function App() {
                  </div>
               </div>
             </section>
-          )}
+            )}
+          </div> 
+          <details className="credits">
+          <summary aria-label="Credits" title="Credits">
+            ⓘ<span className="credits-label"> Credits</span>
+            {moodCount > 0 && <span className="credits-count"> · {moodCount} recorded</span>}
+          </summary>
+            <div className="credits-panel">
+              <p>
+                Unofficial fan project, not affiliated with Nintendo, Game Freak, or The Pokémon
+                Company. Pokémon and Pokémon character names are trademarks of Nintendo. Sprites via{' '}
+                <a href="https://github.com/PokeAPI/sprites" target="_blank" rel="noreferrer">PokéAPI</a>.
+              </p>
+              <p>
+                Sounds (rain, waves, forest, 8-bit pop) by{' '}
+                <a href="https://www.orangefreesounds.com" target="_blank" rel="noreferrer">Orange Free Sounds</a>,{' '}
+                <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noreferrer">CC BY-NC 4.0</a>.
+              </p>
+              <p>
+                Music in the background from{' '}
+                <a href="https://www.FesliyanStudios.com" target="_blank" rel="noreferrer">https://www.FesliyanStudios.com</a>.
+              </p>
+              <p>
+                Weather: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a>.
+                Your approximate location is guessed automatically from your IP address (or from your
+                browser, with your permission, if that fails). City names come from{' '}
+                <a href="https://www.bigdatacloud.com" target="_blank" rel="noreferrer">BigDataCloud</a>.
+                This app doesn't store it.
+              </p>
+            </div>
+         </details>
         </div>
-      </div>
-    </main>
+      </main>
   );
 }
 
