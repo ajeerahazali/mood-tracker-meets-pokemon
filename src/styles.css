@@ -610,7 +610,7 @@ h2 {
 .reflection-weather-note {
   margin: 0;
   color: var(--text-soft);
-  font-size: 0.98rem;
+  font-size: 1.0rem;
 }
 
 .section-grid {
@@ -892,7 +892,7 @@ h2 {
   display: grid;
   gap: 6px;
   padding: 14px 16px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: color-mix(in srgb, var(--surface-soft) 78%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.3);
   text-align: center;
@@ -916,14 +916,19 @@ h2 {
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(255, 255, 255, 0.16);
-  color: var(--text-main);
+  color: #ffffff;
   padding: 12px 14px;
   resize: vertical;
   line-height: 1.5;
+  font-size: 18px;
+  text-align: center;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .noticed-input::placeholder {
-  color: var(--text-soft);
+  color: #ffffff;
+  opacity: 0.7;
+  text-align: center;
 }
 
 .summary-card strong {
@@ -1036,6 +1041,8 @@ h2 {
   margin: 0 auto;
   text-align: center;
   justify-items: center;
+  grid-template-columns: 1fr;
+  
 }
 
 .mooddex-pokemon {
@@ -1075,7 +1082,7 @@ h2 {
 }
 
 .mooddex-trainer-notes {
-  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 100%, transparent);
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 18px;
   padding: 16px;
@@ -1084,7 +1091,7 @@ h2 {
 .mooddex-trainer-notes h3 {
   margin: 0 0 8px;
   font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   color: var(--text-main);
 }
 
@@ -1290,8 +1297,11 @@ h2 {
 .pokedex-screen .summary-card,
 .pokedex-screen .mooddex-hero-copy,
 .pokedex-screen .noticed-input {
-  font-family: 'Courier New', Courier, monospace;
-  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.6);
+  border-color: #334155;
+  color: #ffffff;
+  font-size: 17px;
+  text-align: center;
 }
 
 .pokedex-screen .summary-card span {
@@ -1309,7 +1319,9 @@ h2 {
 }
 
 .pokedex-screen .noticed-input::placeholder {
-  color: #64748b;
+  color: #ffffff;
+  opacity: 0.7;
+  text-align: center;
 }
 
 @keyframes sprite-bob {

@@ -822,10 +822,6 @@ function App() {
 
                 <div className="reflection-summary-list">
                   <div className="summary-card summary-card-wide">
-                    <span>Today's mood</span>
-                    <strong>{selectedMood.emoji} Feeling {selectedMood.label.toLowerCase()}</strong>
-                  </div>
-                  <div className="summary-card summary-card-wide">
                     <span>Energy</span>
                     <strong>{energyLabel}</strong>
                   </div>
@@ -891,10 +887,6 @@ function App() {
                      </div>
 
                      <div className="mooddex-summary">
-                       <div className="summary-card summary-card-wide">
-                         <span>Today's mood</span>
-                         <strong>{selectedMood.emoji} Feeling {selectedMood.label.toLowerCase()}</strong>
-                       </div>
                        <div className="summary-card summary-card-wide">
                          <span>Energy</span>
                          <strong>{energyLabel}</strong>
